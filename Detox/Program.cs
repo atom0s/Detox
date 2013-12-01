@@ -49,6 +49,8 @@ namespace Detox
             // Store the base path to Detox..
             Detox.DetoxBasePath = AppDomain.CurrentDomain.BaseDirectory;
 
+            Logging.Instance.Log("[Detox] Detox started at: " + DateTime.Now);
+
             try
             {
                 // See if we have Terraria in the same folder..
@@ -72,49 +74,60 @@ namespace Detox
                 return;
             }
 
+            Logging.Instance.Log("[Detox] Detox located Terraria at: " + Detox.TerrariaBasePath);
+
             // Set the working folder to Terraria's path..
             Directory.SetCurrentDirectory(Detox.TerrariaBasePath);
 
             // Load the configuration file..
+            Logging.Instance.Log("[Detox] Loading configuration file..");
             Configurations.Instance.LoadConfig(AppDomain.CurrentDomain.BaseDirectory + "\\detox.config.json");
+            Logging.Instance.Log("[Detox] Configuration file loaded!");
 
             // Initialize Steam if requested..
             if (Configurations.Instance.Current.Steam.InitializeSteam)
+            {
+                Logging.Instance.Log("[Steam] Initializing Steam due to configuration option.");
                 Steam.Initialize();
+            }
+
+            // Prepare and apply hooks..
+            Logging.Instance.Log("[Detox] Registering internal hooks..");
+            Events.Initialize();
+            Events.XnaEvents.PreInitialize.Register(null, Hooks.OnXnaPreInitialize, 0);
+            Events.XnaEvents.PostInitialize.Register(null, Hooks.OnXnaPostInitialize, 0);
+            Events.XnaEvents.PostLoadContent.Register(null, Hooks.OnXnaPostLoadContent, 0);
+            Events.XnaEvents.PreUpdate.Register(null, Hooks.OnXnaPreUpdate, 0);
+            Events.XnaEvents.PostUpdate.Register(null, Hooks.OnXnaPostUpdate, 0);
+            Events.XnaEvents.PreDraw.Register(null, Hooks.OnXnaPreDraw, 0);
+            Events.XnaEvents.PostDraw.Register(null, Hooks.OnXnaPostDraw, 0);
+
+            // Apply internal detours..
+            Logging.Instance.Log("[Detox] Applying internal detours / patches..");
+            (from t in Assembly.GetExecutingAssembly().GetTypes()
+             from m in t.GetMethods()
+             from a in m.GetCustomAttributes(typeof(InjectionAttribute), false)
+             select m).ToList().ForEach(m => m.Invoke(null, new object[] { Detox.TerrariaAsm }));
+
+            // Load auto-start plugins..
+            foreach (var s in Configurations.Instance.Current.Plugins.AutoLoadPlugins)
+            {
+                try
+                {
+                    DetoxPluginManager.LoadPlugin(s);
+                    Logging.Instance.Log("[Detox] Loaded auto-load plugin: " + s);
+                }
+                catch
+                {
+                    Logging.Instance.Log("[Detox] Failed to load auto-load plugin: " + s);
+                }
+            }
+
+            // Invoke Detox Initialize event..
+            Events.DetoxEvents.InvokeDetoxInitialize();
 
             try
             {
-                // Prepare and apply hooks..
-                Events.Initialize();
-                Events.XnaEvents.PreInitialize.Register(null, Hooks.OnXnaPreInitialize, 0);
-                Events.XnaEvents.PostInitialize.Register(null, Hooks.OnXnaPostInitialize, 0);
-                Events.XnaEvents.PostLoadContent.Register(null, Hooks.OnXnaPostLoadContent, 0);
-                Events.XnaEvents.PreUpdate.Register(null, Hooks.OnXnaPreUpdate, 0);
-                Events.XnaEvents.PostUpdate.Register(null, Hooks.OnXnaPostUpdate, 0);
-                Events.XnaEvents.PreDraw.Register(null, Hooks.OnXnaPreDraw, 0);
-                Events.XnaEvents.PostDraw.Register(null, Hooks.OnXnaPostDraw, 0);
-
-                // Apply internal detours..
-                (from t in Assembly.GetExecutingAssembly().GetTypes()
-                    from m in t.GetMethods()
-                    from a in m.GetCustomAttributes(typeof(InjectionAttribute), false)
-                    select m).ToList().ForEach(m => m.Invoke(null, new object[] { Detox.TerrariaAsm }));
-
-                // Load auto-start plugins..
-                foreach (var s in Configurations.Instance.Current.Plugins.AutoLoadPlugins)
-                {
-                    try
-                    {
-                        DetoxPluginManager.LoadPlugin(s);
-                    }
-                    catch
-                    {
-                    }
-                }
-
-                // Invoke Detox Initialize event..
-                Events.DetoxEvents.InvokeDetoxInitialize();
-
                 // Initialize Terraria..
                 using (var mStream = new MemoryStream())
                 {
@@ -143,16 +156,25 @@ namespace Detox
                     run.Invoke(ctor, null);
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Logging.Instance.Log("[Detox] Encountered an error while starting / running Terraria:");
+                Logging.Instance.Log(e.ToString());
             }
 
             // Deinitialize Steam if requested..
             if (Configurations.Instance.Current.Steam.InitializeSteam)
+            {
+                Logging.Instance.Log("[Steam] Shutting down Steam due to configuration option.");
                 Steam.Shutdown();
+            }
 
             // Save the configuration file..
+            Logging.Instance.Log("[Detox] Saving configuration file..");
             Configurations.Instance.SaveConfig(AppDomain.CurrentDomain.BaseDirectory + "\\detox.config.json");
+            Logging.Instance.Log("[Detox] Configuration file saved!");
+
+            Logging.Instance.Log("[Detox] Detox exited at: " + DateTime.Now);
         }
 
         /// <summary>

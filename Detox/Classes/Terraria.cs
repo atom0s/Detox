@@ -65,6 +65,8 @@ namespace Detox.Classes
         /// <param name="game"></param>
         public static void TerrariaConstructor(Game game)
         {
+            Logging.Instance.Log("[Detox:Terraria] Terraria.ctor() was called!");
+
             // Store the game object..
             Terraria.MainGame = game;
 
@@ -79,6 +81,8 @@ namespace Detox.Classes
             var version = Terraria.GetMainField<string>("versionNumber");
             Terraria.SetMainField("versionNumber", string.Format("Detox Client Mod :: by atom0s -- v{0} :: Terraria {1}", Assembly.GetExecutingAssembly().GetName().Version, version));
             Terraria.SetMainField("versionNumber2", string.Format("Detox Client Mod :: by atom0s -- v{0} :: Terraria {1}", Assembly.GetExecutingAssembly().GetName().Version, version));
+
+            Logging.Instance.Log("[Detox:Terraria] Terraria.ctor() completed!");
         }
 
         /// <summary>

@@ -36,6 +36,8 @@ namespace Detox.Classes
         /// <param name="e"></param>
         public static void OnXnaPreInitialize(System.EventArgs e)
         {
+            Logging.Instance.Log("[Detox:Xna] OnXnaPreInitialize was called!");
+
             // Set the content base path..
             Terraria.MainGame.Content.RootDirectory = Path.Combine(Detox.TerrariaBasePath, "Content");
 
@@ -52,6 +54,8 @@ namespace Detox.Classes
                     if (Detox.GuiManager != null)
                         Detox.GuiManager.RenderTarget = null;
                 };
+
+            Logging.Instance.Log("[Detox:Xna] OnXnaPreInitialize completed!");
         }
         
         /// <summary>
@@ -60,6 +64,8 @@ namespace Detox.Classes
         /// <param name="e"></param>
         public static void OnXnaPostInitialize(System.EventArgs e)
         {
+            Logging.Instance.Log("[Detox:Xna] OnXnaPostInitialize was called!");
+
             // Adjust the game resolution per-configurations..
             Terraria.MainGraphics.PreferredBackBufferWidth = Configurations.Instance.Current.Graphics.StartupWindowWidth;
             Terraria.MainGraphics.PreferredBackBufferHeight = Configurations.Instance.Current.Graphics.StartupWindowHeight;
@@ -99,6 +105,8 @@ namespace Detox.Classes
                     if (!Detox.DetoxConsole.Visible)
                         Detox.DetoxConsole.Focused = false;
                 });
+
+            Logging.Instance.Log("[Detox:Xna] OnXnaPostInitialize completed!");
         }
 
         /// <summary>
@@ -107,6 +115,8 @@ namespace Detox.Classes
         /// <param name="e"></param>
         public static void OnXnaPostLoadContent(XnaLoadContentEventArgs e)
         {
+            Logging.Instance.Log("[Detox:Xna] OnXnaPostLoadContent was called!");
+
             // Store the sprite batch object..
             Terraria.MainSpriteBatch = Terraria.GetMainField<SpriteBatch>("spriteBatch", true);
 
@@ -175,6 +185,8 @@ namespace Detox.Classes
             var cursorTexture = new Texture2D(Terraria.MainGame.GraphicsDevice, 1, 1);
             cursorTexture.SetData(new[] { Color.Transparent });
             Terraria.SetMainField("cursorTexture", cursorTexture);
+
+            Logging.Instance.Log("[Detox:Xna] OnXnaPostLoadContent completed!");
         }
 
         /// <summary>

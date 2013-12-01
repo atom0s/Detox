@@ -73,6 +73,7 @@
     <Compile Include="Classes\DetoxObject.cs" />
     <Compile Include="Classes\Hooks.cs" />
     <Compile Include="Classes\DetoxPlayers.cs" />
+    <Compile Include="Classes\Logging.cs" />
     <Compile Include="Classes\Steam.cs" />
     <Compile Include="Classes\Terraria.cs" />
     <Compile Include="Controls\DetoxChatWindow.cs" />
